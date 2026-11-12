@@ -1,0 +1,144 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated sender profile stored under users/{userId}",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID of the owner" },
+        "displayName": { "type": "string", "description": "Display name of the sender" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Written via FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Written via FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "displayName", "createdAt", "updatedAt"]
+    },
+    "ECard": {
+      "title": "ECard",
+      "description": "Custom e-card created by a sender with category, template, freeform canvas elements, animation, and background music",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "shareCode": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["INDIVIDU", "MAJLIS", "PERNIAGAAN", "PERAYAAN"] },
+        "templateId": { "type": "string" },
+        "recipientName": { "type": "string" },
+        "greetingTitle": { "type": "string" },
+        "greetingBody": { "type": "string" },
+        "senderName": { "type": "string" },
+        "eventDate": { "type": "string" },
+        "eventTime": { "type": "string" },
+        "eventVenue": { "type": "string" },
+        "businessRole": { "type": "string" },
+        "businessCompany": { "type": "string" },
+        "businessPhone": { "type": "string" },
+        "businessEmail": { "type": "string" },
+        "businessWebsite": { "type": "string" },
+        "paperStyle": { "type": "string" },
+        "frameStyle": { "type": "string" },
+        "animationType": { "type": "string" },
+        "musicTrack": { "type": "string" },
+        "rsvpEnabled": { "type": "boolean" },
+        "elements": { "type": "array", "description": "Bounded list (max 25) of freeform canvas elements" },
+        "viewCount": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Written via FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Written via FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "shareCode", "title", "category", "templateId", "greetingTitle", "greetingBody", "senderName", "paperStyle", "frameStyle", "animationType", "musicTrack", "rsvpEnabled", "elements", "viewCount", "createdAt", "updatedAt"]
+    },
+    "GuestEntry": {
+      "title": "GuestEntry",
+      "description": "Private guest invitation and live RSVP status entry under users/{userId}/cards/{cardId}/guests/{guestId}",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "cardId": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "group": { "type": "string", "enum": ["KELUARGA", "RAKAN", "VIP", "PERNIAGAAN", "UMUM"] },
+        "status": { "type": "string", "enum": ["DRAF", "DIHANTAR", "DIBUKA", "HADIR", "MUNGKIN", "TIDAK_HADIR"] },
+        "pax": { "type": "integer" },
+        "note": { "type": "string" },
+        "inviteCode": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Written via FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Written via FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "cardId", "name", "group", "status", "pax", "inviteCode", "createdAt", "updatedAt"]
+    },
+    "SharedCard": {
+      "title": "SharedCard",
+      "description": "Shareable non-PII card snapshot keyed by unique shareCode for recipient link viewing",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string" },
+        "cardId": { "type": "string" },
+        "shareCode": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["INDIVIDU", "MAJLIS", "PERNIAGAAN", "PERAYAAN"] },
+        "templateId": { "type": "string" },
+        "recipientName": { "type": "string" },
+        "greetingTitle": { "type": "string" },
+        "greetingBody": { "type": "string" },
+        "senderName": { "type": "string" },
+        "eventDate": { "type": "string" },
+        "eventTime": { "type": "string" },
+        "eventVenue": { "type": "string" },
+        "businessRole": { "type": "string" },
+        "businessCompany": { "type": "string" },
+        "businessPhone": { "type": "string" },
+        "businessEmail": { "type": "string" },
+        "businessWebsite": { "type": "string" },
+        "paperStyle": { "type": "string" },
+        "frameStyle": { "type": "string" },
+        "animationType": { "type": "string" },
+        "musicTrack": { "type": "string" },
+        "rsvpEnabled": { "type": "boolean" },
+        "elements": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Written via FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Written via FieldValue.serverTimestamp()" }
+      },
+      "required": ["ownerId", "cardId", "shareCode", "title", "category", "templateId", "greetingTitle", "greetingBody", "senderName", "paperStyle", "frameStyle", "animationType", "musicTrack", "rsvpEnabled", "elements", "createdAt", "updatedAt"]
+    },
+    "SharedRsvp": {
+      "title": "SharedRsvp",
+      "description": "Recipient view confirmation or RSVP response submitted via shared card link",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string" },
+        "responderUid": { "type": "string" },
+        "shareCode": { "type": "string" },
+        "cardId": { "type": "string" },
+        "guestName": { "type": "string" },
+        "status": { "type": "string", "enum": ["DIBUKA", "HADIR", "MUNGKIN", "TIDAK_HADIR"] },
+        "pax": { "type": "integer" },
+        "wishes": { "type": "string" },
+        "inviteCode": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Written via FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Written via FieldValue.serverTimestamp()" }
+      },
+      "required": ["ownerId", "responderUid", "shareCode", "cardId", "guestName", "status", "pax", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Sender profile document"
+    },
+    "/users/{userId}/cards/{cardId}": {
+      "schema": { "$ref": "#/entities/ECard" },
+      "description": "Sender's private collection of created e-cards"
+    },
+    "/users/{userId}/cards/{cardId}/guests/{guestId}": {
+      "schema": { "$ref": "#/entities/GuestEntry" },
+      "description": "Private guest list and RSVP tracking entries for a specific card"
+    },
+    "/sharedCards/{shareCode}": {
+      "schema": { "$ref": "#/entities/SharedCard" },
+      "description": "Shareable non-PII card payload accessed by unique shareCode"
+    },
+    "/sharedCards/{shareCode}/rsvps/{rsvpId}": {
+      "schema": { "$ref": "#/entities/SharedRsvp" },
+      "description": "Live feedback and RSVP submissions linked to a shared card"
+    }
+  }
+}

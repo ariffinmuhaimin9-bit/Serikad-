@@ -1,0 +1,324 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOptString(data, key, maxLen) {
+      return !(key in data) || data[key] == null || (data[key] is string && data[key].size() <= maxLen);
+    }
+
+    function isValidCategory(cat) {
+      return cat in ['INDIVIDU', 'MAJLIS', 'PERNIAGAAN', 'PERAYAAN'];
+    }
+
+    function isValidGuestGroup(grp) {
+      return grp in ['KELUARGA', 'RAKAN', 'VIP', 'PERNIAGAAN', 'UMUM'];
+    }
+
+    function isValidGuestStatus(st) {
+      return st in ['DRAF', 'DIHANTAR', 'DIBUKA', 'HADIR', 'MUNGKIN', 'TIDAK_HADIR'];
+    }
+
+    function isValidSharedRsvpStatus(st) {
+      return st in ['DIBUKA', 'HADIR', 'MUNGKIN', 'TIDAK_HADIR'];
+    }
+
+    // --- Validation Helpers ---
+    function isValidUserProfile(data, userId) {
+      return data.userId is string &&
+             data.userId == userId &&
+             data.displayName is string &&
+             data.displayName.size() >= 1 &&
+             data.displayName.size() <= 80 &&
+             data.createdAt is timestamp &&
+             data.createdAt <= request.time &&
+             data.updatedAt is timestamp &&
+             data.updatedAt <= request.time;
+    }
+
+    function isValidECard(data, ownerUid) {
+      return data.userId is string &&
+             data.userId == ownerUid &&
+             isValidId(data.shareCode) &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+             isValidCategory(data.category) &&
+             data.templateId is string && data.templateId.size() >= 1 && data.templateId.size() <= 64 &&
+             isOptString(data, 'recipientName', 100) &&
+             data.greetingTitle is string && data.greetingTitle.size() <= 160 &&
+             data.greetingBody is string && data.greetingBody.size() <= 1500 &&
+             data.senderName is string && data.senderName.size() <= 100 &&
+             isOptString(data, 'eventDate', 60) &&
+             isOptString(data, 'eventTime', 60) &&
+             isOptString(data, 'eventVenue', 200) &&
+             isOptString(data, 'businessRole', 100) &&
+             isOptString(data, 'businessCompany', 120) &&
+             isOptString(data, 'businessPhone', 40) &&
+             isOptString(data, 'businessEmail', 120) &&
+             isOptString(data, 'businessWebsite', 200) &&
+             data.paperStyle is string && data.paperStyle.size() <= 40 &&
+             data.frameStyle is string && data.frameStyle.size() <= 40 &&
+             data.animationType is string && data.animationType.size() <= 40 &&
+             data.musicTrack is string && data.musicTrack.size() <= 40 &&
+             data.rsvpEnabled is bool &&
+             data.elements is list && data.elements.size() <= 25 &&
+             (data.elements.size() == 0 || data.elements[0] is map) &&
+             data.viewCount is int && data.viewCount >= 0 && data.viewCount <= 1000000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidGuestEntry(data, ownerUid, cardId) {
+      return data.userId is string &&
+             data.userId == ownerUid &&
+             data.cardId is string &&
+             data.cardId == cardId &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             isOptString(data, 'phone', 30) &&
+             isValidGuestGroup(data.group) &&
+             isValidGuestStatus(data.status) &&
+             data.pax is int && data.pax >= 1 && data.pax <= 20 &&
+             isOptString(data, 'note', 500) &&
+             data.inviteCode is string && data.inviteCode.size() >= 4 && data.inviteCode.size() <= 64 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidSharedCard(data, shareCode) {
+      return data.ownerId is string &&
+             data.cardId is string && isValidId(data.cardId) &&
+             data.shareCode is string && data.shareCode == shareCode &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+             isValidCategory(data.category) &&
+             data.templateId is string && data.templateId.size() >= 1 && data.templateId.size() <= 64 &&
+             isOptString(data, 'recipientName', 100) &&
+             data.greetingTitle is string && data.greetingTitle.size() <= 160 &&
+             data.greetingBody is string && data.greetingBody.size() <= 1500 &&
+             data.senderName is string && data.senderName.size() <= 100 &&
+             isOptString(data, 'eventDate', 60) &&
+             isOptString(data, 'eventTime', 60) &&
+             isOptString(data, 'eventVenue', 200) &&
+             isOptString(data, 'businessRole', 100) &&
+             isOptString(data, 'businessCompany', 120) &&
+             isOptString(data, 'businessPhone', 40) &&
+             isOptString(data, 'businessEmail', 120) &&
+             isOptString(data, 'businessWebsite', 200) &&
+             data.paperStyle is string && data.paperStyle.size() <= 40 &&
+             data.frameStyle is string && data.frameStyle.size() <= 40 &&
+             data.animationType is string && data.animationType.size() <= 40 &&
+             data.musicTrack is string && data.musicTrack.size() <= 40 &&
+             data.rsvpEnabled is bool &&
+             data.elements is list && data.elements.size() <= 25 &&
+             (data.elements.size() == 0 || data.elements[0] is map) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidSharedRsvp(data, shareCode) {
+      return data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 &&
+             data.responderUid is string && data.responderUid.size() >= 1 && data.responderUid.size() <= 128 &&
+             data.shareCode is string && data.shareCode == shareCode &&
+             data.cardId is string && isValidId(data.cardId) &&
+             data.guestName is string && data.guestName.size() >= 1 && data.guestName.size() <= 100 &&
+             isValidSharedRsvpStatus(data.status) &&
+             data.pax is int && data.pax >= 1 && data.pax <= 20 &&
+             isOptString(data, 'wishes', 500) &&
+             isOptString(data, 'inviteCode', 64) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // --- Collection Rules ---
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
+      allow list: if false;
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'createdAt', 'updatedAt']) &&
+                       isValidUserProfile(incoming(), userId);
+      allow update: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       isValidUserProfile(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'updatedAt']);
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+
+      match /cards/{cardId} {
+        allow get: if isSignedIn() && request.auth.uid == userId && isValidId(cardId);
+        allow list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(cardId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'shareCode', 'title', 'category', 'templateId',
+                           'greetingTitle', 'greetingBody', 'senderName',
+                           'paperStyle', 'frameStyle', 'animationType', 'musicTrack',
+                           'rsvpEnabled', 'elements', 'viewCount', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'shareCode', 'title', 'category', 'templateId',
+                           'recipientName', 'greetingTitle', 'greetingBody', 'senderName',
+                           'eventDate', 'eventTime', 'eventVenue',
+                           'businessRole', 'businessCompany', 'businessPhone', 'businessEmail', 'businessWebsite',
+                           'paperStyle', 'frameStyle', 'animationType', 'musicTrack',
+                           'rsvpEnabled', 'elements', 'viewCount', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidECard(incoming(), userId);
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(cardId) &&
+                         isValidECard(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().shareCode == existing().shareCode &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'title', 'category', 'templateId',
+                           'recipientName', 'greetingTitle', 'greetingBody', 'senderName',
+                           'eventDate', 'eventTime', 'eventVenue',
+                           'businessRole', 'businessCompany', 'businessPhone', 'businessEmail', 'businessWebsite',
+                           'paperStyle', 'frameStyle', 'animationType', 'musicTrack',
+                           'rsvpEnabled', 'elements', 'viewCount', 'updatedAt'
+                         ]);
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(cardId);
+
+        match /guests/{guestId} {
+          allow get: if isSignedIn() && request.auth.uid == userId && isValidId(guestId);
+          allow list: if isSignedIn() && request.auth.uid == userId;
+          allow create: if isSignedIn() &&
+                           request.auth.uid == userId &&
+                           isValidId(cardId) &&
+                           isValidId(guestId) &&
+                           exists(/databases/$(database)/documents/users/$(userId)/cards/$(cardId)) &&
+                           incoming().keys().hasAll([
+                             'userId', 'cardId', 'name', 'group', 'status', 'pax',
+                             'inviteCode', 'createdAt', 'updatedAt'
+                           ]) &&
+                           incoming().keys().hasOnly([
+                             'userId', 'cardId', 'name', 'phone', 'group', 'status', 'pax',
+                             'note', 'inviteCode', 'createdAt', 'updatedAt'
+                           ]) &&
+                           isValidGuestEntry(incoming(), userId, cardId);
+          allow update: if isSignedIn() &&
+                           request.auth.uid == userId &&
+                           isValidId(cardId) &&
+                           isValidId(guestId) &&
+                           isValidGuestEntry(incoming(), userId, cardId) &&
+                           incoming().userId == existing().userId &&
+                           incoming().cardId == existing().cardId &&
+                           incoming().inviteCode == existing().inviteCode &&
+                           incoming().createdAt == existing().createdAt &&
+                           incoming().diff(existing()).affectedKeys().hasOnly([
+                             'name', 'phone', 'group', 'status', 'pax', 'note', 'updatedAt'
+                           ]);
+          allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(guestId);
+        }
+      }
+    }
+
+    match /sharedCards/{shareCode} {
+      // Single-document lookup by exact shareCode for signed-in recipients; no blanket list!
+      allow get: if isSignedIn() && isValidId(shareCode);
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(shareCode) &&
+                       incoming().ownerId == request.auth.uid &&
+                       incoming().keys().hasAll([
+                         'ownerId', 'cardId', 'shareCode', 'title', 'category', 'templateId',
+                         'greetingTitle', 'greetingBody', 'senderName',
+                         'paperStyle', 'frameStyle', 'animationType', 'musicTrack',
+                         'rsvpEnabled', 'elements', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'ownerId', 'cardId', 'shareCode', 'title', 'category', 'templateId',
+                         'recipientName', 'greetingTitle', 'greetingBody', 'senderName',
+                         'eventDate', 'eventTime', 'eventVenue',
+                         'businessRole', 'businessCompany', 'businessPhone', 'businessEmail', 'businessWebsite',
+                         'paperStyle', 'frameStyle', 'animationType', 'musicTrack',
+                         'rsvpEnabled', 'elements', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidSharedCard(incoming(), shareCode);
+
+      allow update: if isSignedIn() &&
+                       isValidId(shareCode) &&
+                       existing().ownerId == request.auth.uid &&
+                       incoming().ownerId == existing().ownerId &&
+                       incoming().cardId == existing().cardId &&
+                       incoming().shareCode == existing().shareCode &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidSharedCard(incoming(), shareCode) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'title', 'category', 'templateId',
+                         'recipientName', 'greetingTitle', 'greetingBody', 'senderName',
+                         'eventDate', 'eventTime', 'eventVenue',
+                         'businessRole', 'businessCompany', 'businessPhone', 'businessEmail', 'businessWebsite',
+                         'paperStyle', 'frameStyle', 'animationType', 'musicTrack',
+                         'rsvpEnabled', 'elements', 'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() && isValidId(shareCode) && existing().ownerId == request.auth.uid;
+
+      match /rsvps/{rsvpId} {
+        allow get, list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || resource.data.responderUid == request.auth.uid);
+
+        allow create: if isSignedIn() &&
+                         isValidId(shareCode) &&
+                         isValidId(rsvpId) &&
+                         incoming().responderUid == request.auth.uid &&
+                         incoming().keys().hasAll([
+                           'ownerId', 'responderUid', 'shareCode', 'cardId',
+                           'guestName', 'status', 'pax', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'ownerId', 'responderUid', 'shareCode', 'cardId',
+                           'guestName', 'status', 'pax', 'wishes', 'inviteCode', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidSharedRsvp(incoming(), shareCode) &&
+                         exists(/databases/$(database)/documents/sharedCards/$(shareCode)) &&
+                         incoming().ownerId == get(/databases/$(database)/documents/sharedCards/$(shareCode)).data.ownerId &&
+                         incoming().cardId == get(/databases/$(database)/documents/sharedCards/$(shareCode)).data.cardId;
+
+        allow update: if isSignedIn() &&
+                         isValidId(shareCode) &&
+                         isValidId(rsvpId) &&
+                         isValidSharedRsvp(incoming(), shareCode) &&
+                         (existing().responderUid == request.auth.uid || existing().ownerId == request.auth.uid) &&
+                         incoming().ownerId == existing().ownerId &&
+                         incoming().responderUid == existing().responderUid &&
+                         incoming().shareCode == existing().shareCode &&
+                         incoming().cardId == existing().cardId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'guestName', 'status', 'pax', 'wishes', 'inviteCode', 'updatedAt'
+                         ]);
+
+        allow delete: if isSignedIn() && isValidId(shareCode) && isValidId(rsvpId) && existing().ownerId == request.auth.uid;
+      }
+    }
+  }
+}

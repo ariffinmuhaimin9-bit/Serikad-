@@ -1,0 +1,6 @@
+{
+  "name": "SeriKad",
+  "description": "Studio cipta e-kad kreatif dengan animasi, muzik latar, perkongsian WhatsApp dan pengurusan senarai tetamu serta status jemputan secara langsung.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
