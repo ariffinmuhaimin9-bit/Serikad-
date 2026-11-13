@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "171772188848",
+    "project_id": "serikad-5ac8e",
+    "storage_bucket": "serikad-5ac8e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:171772188848:android:a3a0e3c516a82ceed74375",
+        "android_client_info": {
+          "package_name": "com.aistudio.serikad.xmkqzp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "171772188848-raq9vjdqfvd7kp3fu2c2aoi8e3sa0je8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAweXO1r_gfnC9AJQbT_ktNX_REgjevUEU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "171772188848-raq9vjdqfvd7kp3fu2c2aoi8e3sa0je8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
