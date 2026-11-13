@@ -15,7 +15,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_HOME: /home/runner/android-sdk
 
     steps:
       - name: Checkout code
@@ -27,10 +27,22 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Set up Android SDK Command-Line Tools
+        run: |
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          echo "Mengunduh Android command-line tools..."
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+          unzip -q cmdline-tools.zip
+          mkdir -p $ANDROID_HOME/cmdline-tools/latest
+          mv cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
+          rm -rf cmdline-tools.zip cmdline-tools
+
       - name: Accept Android SDK licenses & Install platform
         run: |
           export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+          echo "Menerima lisensi SDK..."
           yes | sdkmanager --licenses || true
+          echo "Menginstal platform dan build-tools..."
           sdkmanager "platforms;android-36-ext1" "build-tools;36.0.0"
 
       - name: Ensure Gradle Wrapper exists
@@ -71,7 +83,7 @@ jobs:
       - name: Download APK artifact
         uses: actions/download-artifact@v4
         with:
-          name: serikad-debug-apk
+          name: serik_debug_apk # Sesuaikan dengan nama artifak jika perlu
           path: apk
 
       - name: Create GitHub Release
