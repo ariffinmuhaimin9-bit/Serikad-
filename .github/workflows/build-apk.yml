@@ -43,7 +43,7 @@ jobs:
           echo "Menerima lisensi SDK..."
           yes | sdkmanager --licenses || true
           echo "Menginstal platform dan build-tools..."
-          sdkmanager "platforms;android-36-ext1" "build-tools;36.0.0"
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
       - name: Ensure Gradle Wrapper exists
         run: |
@@ -83,7 +83,7 @@ jobs:
       - name: Download APK artifact
         uses: actions/download-artifact@v4
         with:
-          name: serik_debug_apk # Sesuaikan dengan nama artifak jika perlu
+          name: serikad-debug-apk
           path: apk
 
       - name: Create GitHub Release
