@@ -3,10 +3,10 @@ name: Build Android APK
 on:
   workflow_dispatch:
   push:
-     branches: [main]
-     tags: ['v*']
+    branches: [main]
+    tags: ['v*']
   pull_request:
-     branches: [main]
+    branches: [main]
 
 permissions:
   contents: read
@@ -33,17 +33,21 @@ jobs:
           yes | sdkmanager --licenses
           sdkmanager "platforms;android-36-ext1" "build-tools;36.0.0"
 
+      - name: Ensure Gradle Wrapper exists
+        run: |
+          if [ ! -f ./gradlew ]; then
+            echo "Gradle wrapper tidak ditemukan, mengunduh Gradle 9.3.1..."
+            wget -q https://services.gradle.org/distributions/gradle-9.3.1-bin.zip
+            unzip -q gradle-9.3.1-bin.zip
+            export PATH=$PWD/gradle-9.3.1/bin:$PATH
+            gradle wrapper --gradle-version 9.3.1
+          fi
+          chmod +x gradlew
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.3.1'
-
-      - name: Ensure Gradle Wrapper exists
-        run: |
-          if [ ! -f ./gradlew ]; then
-            gradle wrapper --gradle-version 9.3.1
-          fi
-          chmod +x gradlew
 
       - name: Build debug APK
         run: ./gradlew assembleDebug
